@@ -50,7 +50,7 @@ const scoreColor = (score: number) => {
 };
 
 const isIndianSymbol = (symbol: string) => symbol.endsWith('.NS') || symbol.endsWith('.BO');
-
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const StockWorkspaceView: React.FC = () => {
     const [searchParams] = useSearchParams();
     const [selected, setSelected] = useState<SearchResult | null>(null);
@@ -83,8 +83,7 @@ const StockWorkspaceView: React.FC = () => {
 
     const loadResearch = (symbol: string) => {
         setCardLoading(true);
-        fetch(`http://localhost:8000/api/insights/${encodeURIComponent(symbol)}`)
-            .then((r) => r.json())
+        fetch(`${API_BASE}/api/insights/${encodeURIComponent(symbol)}`)            .then((r) => r.json())
             .then((json: SignalCard) => setCard(json))
             .catch((err) => console.warn('Could not load research:', err))
             .finally(() => setCardLoading(false));
