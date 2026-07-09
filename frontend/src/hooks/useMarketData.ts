@@ -33,7 +33,7 @@ export type ConnectionStatus = 'connecting' | 'open' | 'closed' | 'error';
 // ---- Config ----
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const WS_URL = 'ws://localhost:8000/api/ws/market-data';
+const WS_URL = `${API_BASE.replace(/^http/, 'ws')}/api/ws/market-data`;
 const THROTTLE_MS = 500; // per Day 7 of the build plan
 const MAX_POINTS_PER_SYMBOL = 120; // keep the chart light
 
