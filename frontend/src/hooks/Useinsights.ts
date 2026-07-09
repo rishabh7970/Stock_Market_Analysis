@@ -36,7 +36,7 @@ export interface SignalCard {
     disclaimer: string;
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const POLL_INTERVAL_MS = 60_000; // insights refresh server-side every 15 min; polling every 60s is plenty
 
 /**
