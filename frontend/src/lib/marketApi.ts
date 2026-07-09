@@ -1,6 +1,6 @@
 import type { ChartPoint } from '../hooks/useMarketData';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export type RangeKey = '1d' | '7d' | '1mo' | '3mo' | '1y';
 
