@@ -1,64 +1,64 @@
-# AITradeAgent Pro - Stock Market Analysis Dashboard
+# AITradeAgent Pro
 
-AITradeAgent Pro is a full-stack stock market analysis platform built with a React + Vite frontend and a FastAPI backend. It combines live market data, Indian market tracking, technical analysis, sentiment analysis, multi-agent scoring, Monte Carlo forecasting, candlestick pattern detection, and walk-forward backtesting into one interactive dashboard.
+A personal, self-hosted stock research platform covering US, crypto, and Indian (NSE/BSE) markets — live prices, AI multi-agent scoring, Monte Carlo forecasting, candlestick pattern recognition, and backtesting. Runs entirely on free, local infrastructure.
 
-> This project is for educational and research purposes only. It does not provide financial advice or buy/sell recommendations.
+**Research tool, not a trading system. Nothing here is financial advice.**
 
-## Tech Stack
+---
 
-### Frontend
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Custom SVG-based chart components
-- WebSocket-based live data hooks
+## AI & Agents
 
-### Backend
-- Python
-- FastAPI
-- WebSockets
-- yfinance
-- Finnhub WebSocket API
-- pandas
-- numpy
-- ta
-- vaderSentiment
-- LangGraph
-- LangChain Ollama
-- Ollama local LLM
+**Screener (`agents.py`)** — a real [LangGraph](https://github.com/langchain-ai/langgraph) pipeline:
+`fetch_data → technical_agent → sentiment_agent → fundamental_agent → risk_manager → narrative_agent`
 
-## Core Features
+Each agent scores one signal (0–100). The risk manager combines them with weights that shift by your chosen horizon — short-term leans technical/sentiment, long-term leans fundamental. The narrative agent optionally asks a **local Ollama LLM** to explain the score in plain language — disabled by default (`ENABLE_OLLAMA_NARRATIVE=false`), since running an LLM locally can be resource-heavy. Scoring works fully without it.
 
-## 1. Live Market Dashboard
+The system never outputs "buy X" — only transparent sub-scores, their weights, and an optional plain-language explanation.
 
-The dashboard tracks live or near-live market data and displays:
+**Forecasting (`forecasting.py`)** — Monte Carlo (GBM) simulation, 500 random paths from historical drift/volatility, instead of an ARIMA point forecast (which collapses to a near-straight line). Candlestick patterns detected on recent candles apply a small, capped, decaying nudge to the drift — always shown, never silent.
 
-- US stock and crypto prices
-- Indian NSE/BSE watchlist
-- Live connection status
-- Largest Indian market movers
-- Interactive stock charts
-- Quick links to full analysis pages
-- Currency-aware price formatting
+**Candlestick patterns (`candlestick_patterns.py`)** — 20 classical patterns, implemented in pure pandas (no TA-Lib, avoids a fragile compiled dependency).
 
-US and crypto live data comes from Finnhub WebSocket streams. Indian market data comes from Yahoo Finance through `yfinance`, polled periodically because there is no free official real-time NSE/BSE feed.
+**Backtesting (`backtesting.py`)** — walk-forward test of the technical score only. Fundamentals/sentiment are excluded on purpose: `yfinance` only exposes current values, so scoring the past with today's data would be look-ahead bias.
 
-## 2. Currency-Aware Stock Display
+**Insights (`insights.py`)** — news sentiment (VADER), technicals (`ta`), fundamentals (`yfinance`) — the shared data layer everything else builds on.
 
-The project includes a currency detection system that automatically formats prices based on the selected stock symbol.
+---
 
-Examples:
+## Other features
+Real-time US/crypto (Finnhub) + Indian (yfinance) prices, a unified "Analyze" workspace (search once, see everything via sub-tabs), dynamic watchlist with search/add, live ticker tape, dark trading-terminal UI.
 
-- `AAPL` -> USD `$`
-- `RELIANCE.NS` -> INR `₹`
-- `TCS.BO` -> INR `₹`
-- `7203.T` -> JPY `¥`
-- `.L` stocks -> GBP `£`
-- European market suffixes -> EUR `€`
-- Crypto pairs like `BTC-USD` -> USD `$`
+## Tech stack
+**Backend:** FastAPI, LangGraph, LangChain-Ollama, yfinance, ta, vaderSentiment, NumPy/Pandas, websockets
+**Frontend:** React + TypeScript + Vite, Tailwind CSS
 
-This is handled in:
+---
 
-```txt
-frontend/src/lib/marketMeta.ts
+## Setup
+
+```bash
+# Backend
+cd backend
+python -m venv venv && venv\Scripts\activate
+pip install fastapi uvicorn websockets python-dotenv pydantic requests yfinance vaderSentiment ta pandas numpy langgraph langchain-ollama
+uvicorn app.main:app --reload
+```
+
+Create `backend/.env`:
+```
+FINNHUB_API_KEY=your_key_here
+ENABLE_OLLAMA_NARRATIVE=false
+```
+
+```bash
+# Frontend
+cd frontend
+npm install && npm run dev
+```
+
+Ollama (optional, for LLM narratives): install from ollama.com, `ollama pull llama3.2`, then set `ENABLE_OLLAMA_NARRATIVE=true`. Test it standalone first — if it's unstable on its own, don't enable it here.
+
+---
+
+## Disclaimers
+Personal, educational project. Not financial advice, not a trading system. Forecasts are simulations, not predictions. Candlestick patterns have weak empirical support. Backtests don't guarantee future results. Verify independently.
